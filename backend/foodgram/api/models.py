@@ -1,6 +1,13 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from users.models import User
+
+class CustomUser(AbstractUser):
+    email = models.EmailField(unique=True)
+    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+
+    def __str__(self):
+        return self.username
 
 
 class Unit(models.Model):
@@ -24,7 +31,11 @@ class RecipeIngredients(models.Model):
 
 
 class Recipe(models.Model):
-    author = models.ForeignKey(User, on_delete=models.CASCADE)
+    author = models.ForeignKey(
+        CustomUser,
+        related_name='recipes',
+        on_delete=models.CASCADE
+    )
     title = models.CharField(max_length=256)
     image = models.ImageField(upload_to='recipes/')
     description = models.TextField(max_length=2000)
