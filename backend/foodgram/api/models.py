@@ -13,10 +13,13 @@ class CustomUser(AbstractUser):
 class Unit(models.Model):
     title = models.CharField(max_length=30)
 
+    def __str__(self):
+        return self.title
+
 
 class Ingredient(models.Model):
     title = models.CharField(max_length=100)
-    unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
+    measurement_unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
 
 class Tag(models.Model):
