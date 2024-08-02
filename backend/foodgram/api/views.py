@@ -3,8 +3,8 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 
 from .models import Ingredient, Tag
-from .serializers import IngredientSerializer, TagSerializer, UserCreateSerializer, UserSerializer
-
+from .serializers import IngredientSerializer, TagSerializer, \
+    UserCreateSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -33,3 +33,8 @@ class UserViewSet(viewsets.ViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def retrieve(self, request, pk=None):
+        user = User.objects.get(pk=pk)
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
