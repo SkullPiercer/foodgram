@@ -3,7 +3,7 @@ from rest_framework import viewsets, status
 from rest_framework.response import Response
 
 from .models import Ingredient, Tag
-from .serializers import IngredientSerializer, TagSerializer, UserCreateSerializer
+from .serializers import IngredientSerializer, TagSerializer, UserCreateSerializer, UserSerializer
 
 
 User = get_user_model()
@@ -21,6 +21,11 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class UserViewSet(viewsets.ViewSet):
     queryset = User.objects.all()
+
+    def list(self, request):
+        users = User.objects.all()
+        serializer = UserSerializer(users, many=True)
+        return Response(serializer.data)
 
     def create(self, request):
         serializer = UserCreateSerializer(data=request.data)
