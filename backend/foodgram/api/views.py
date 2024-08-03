@@ -1,5 +1,5 @@
 from django.contrib.auth import get_user_model
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, permissions
 from rest_framework.response import Response
 
 from .models import Ingredient, Tag
@@ -21,6 +21,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
 
 class UserViewSet(viewsets.ViewSet):
     queryset = User.objects.all()
+    permission_classes = (permissions.AllowAny,)
 
     def list(self, request):
         users = User.objects.all()
@@ -28,7 +29,7 @@ class UserViewSet(viewsets.ViewSet):
         return Response(serializer.data)
 
     @staticmethod
-    def create(self, request):
+    def create(request):
         serializer = UserCreateSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()

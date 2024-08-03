@@ -3,8 +3,43 @@ from django.db import models
 
 
 class CustomUser(AbstractUser):
-    email = models.EmailField(unique=True)
-    avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = (
+        'username',
+        'first_name',
+        'last_name'
+    )
+
+    email = models.EmailField(
+        verbose_name='Адрес электронной почты',
+        unique=True,
+        error_messages={
+            'unique': 'This email already taken'
+        }
+    )
+    username = models.CharField(
+        verbose_name='Имя пользователя',
+        unique=True,
+        error_messages={
+            'unique': 'This username already taken'
+        }
+    )
+
+    first_name = models.CharField(
+        verbose_name='Имя',
+        max_length=150
+    )
+
+    last_name = models.CharField(
+        verbose_name='Фамилия',
+        max_length=150
+    )
+
+    avatar = models.ImageField(
+        upload_to='avatars/',
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return self.username
