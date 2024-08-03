@@ -1,6 +1,8 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
+from .validators import username_validator
+
 
 class CustomUser(AbstractUser):
     USERNAME_FIELD = 'email'
@@ -23,7 +25,8 @@ class CustomUser(AbstractUser):
         error_messages={
             'unique': 'This username already taken'
         },
-        max_length=150
+        max_length=150,
+        validators=[username_validator],
     )
 
     first_name = models.CharField(
