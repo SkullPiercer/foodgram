@@ -1,10 +1,10 @@
 from django.contrib.auth import get_user_model
+from djoser import views as djoser_views
 from rest_framework import viewsets, status, permissions
-from rest_framework.response import Response
+
 
 from .models import Ingredient, Tag
-from .serializers import IngredientSerializer, TagSerializer, \
-    UserCreateSerializer, UserSerializer
+from .serializers import IngredientSerializer, TagSerializer, UserSerializer
 
 User = get_user_model()
 
@@ -19,25 +19,6 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     serializer_class = IngredientSerializer
 
 
-class UserViewSet(viewsets.ViewSet):
+class UserViewSet(djoser_views.UserViewSet):
     queryset = User.objects.all()
-    permission_classes = (permissions.AllowAny,)
-
-    def list(self, request):
-        users = User.objects.all()
-        serializer = UserSerializer(users, many=True)
-        return Response(serializer.data)
-
-    @staticmethod
-    def create(request):
-        serializer = UserCreateSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    @staticmethod
-    def retrieve(request, pk=None):
-        user = User.objects.get(pk=pk)
-        serializer = UserSerializer(user)
-        return Response(serializer.data)
+    serializer_class = UserSerializer

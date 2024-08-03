@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from .models import Ingredient, Tag
+from .validators import username_validator
 
 User = get_user_model()
 
@@ -20,22 +22,18 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = ('id', 'title', 'measurement_unit')
 
 
-class UserCreateSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(required=True)
-    first_name = serializers.CharField(required=True)
-    last_name = serializers.CharField(required=True)
-
-    class Meta:
-        model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name')
-        write_only_fields = ('password',)
-
-    def create(self, validated_data):
-        user = User.objects.create_user(**validated_data)
-        return user
-
-
 class UserSerializer(serializers.ModelSerializer):
+    username = serializers.CharField(
+        validators=(username_validator,)
+    )
+
     class Meta:
         model = User
-        fields = ('id', 'email', 'username', 'first_name', 'last_name')
+        fields = (
+            'email',
+            'id',
+            'username',
+            'first_name',
+            'last_name',
+            'avatar'
+        )

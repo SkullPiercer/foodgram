@@ -22,7 +22,8 @@ class CustomUser(AbstractUser):
         unique=True,
         error_messages={
             'unique': 'This username already taken'
-        }
+        },
+        max_length=150
     )
 
     first_name = models.CharField(
@@ -40,6 +41,11 @@ class CustomUser(AbstractUser):
         null=True,
         blank=True
     )
+
+    class Meta:
+        verbose_name = 'Пользователь'
+        verbose_name_plural = 'Пользователи'
+        ordering = ('username',)
 
     def __str__(self):
         return self.username
