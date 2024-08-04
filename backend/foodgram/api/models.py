@@ -71,7 +71,7 @@ class Ingredient(models.Model):
 
 
 class Tag(models.Model):
-    title = models.CharField(max_length=50)
+    name = models.CharField(max_length=50)
     slug = models.SlugField(unique=True)
 
 
