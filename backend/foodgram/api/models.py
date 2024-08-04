@@ -17,7 +17,8 @@ class CustomUser(AbstractUser):
         unique=True,
         error_messages={
             'unique': 'This email already taken'
-        }
+        },
+        blank=False,
     )
     username = models.CharField(
         verbose_name='Имя пользователя',
@@ -27,22 +28,25 @@ class CustomUser(AbstractUser):
         },
         max_length=150,
         validators=[username_validator],
+        blank=False,
     )
 
     first_name = models.CharField(
         verbose_name='Имя',
-        max_length=150
+        max_length=150,
+        blank=False,
     )
 
     last_name = models.CharField(
         verbose_name='Фамилия',
-        max_length=150
+        max_length=150,
+        blank=False,
     )
 
     avatar = models.ImageField(
         upload_to='avatars/',
         null=True,
-        blank=True
+        blank=True,
     )
 
     class Meta:
