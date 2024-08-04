@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django_filters.rest_framework import DjangoFilterBackend
 from djoser import views as djoser_views
 from rest_framework import viewsets, status, permissions
 from rest_framework.pagination import LimitOffsetPagination
@@ -18,7 +19,8 @@ class TagViewSet(viewsets.ReadOnlyModelViewSet):
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
-
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('name',)
 
 class UserViewSet(djoser_views.UserViewSet):
     queryset = User.objects.all()

@@ -66,7 +66,7 @@ class Unit(models.Model):
 
 
 class Ingredient(models.Model):
-    title = models.CharField(max_length=100)
+    name = models.CharField(max_length=100)
     measurement_unit = models.ForeignKey(Unit, on_delete=models.CASCADE)
 
 
