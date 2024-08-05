@@ -1,11 +1,24 @@
+import base64
+
+from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
-from .models import Ingredient, Tag
+from .models import Ingredient, Recipe, RecipeIngredients, Tag
 from .validators import username_validator
 
 User = get_user_model()
+
+
+class Base64ImageField(serializers.ImageField):
+    def to_internal_value(self, data):
+        if isinstance(data, str) and data.startswith('data:image'):
+            format, imgstr = data.split(';base64,')
+            ext = format.split('/')[-1]
+            data = ContentFile(base64.b64decode(imgstr), name='temp.' + ext)
+
+        return super().to_internal_value(data)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -37,3 +50,75 @@ class UserSerializer(serializers.ModelSerializer):
             'last_name',
             'avatar'
         )
+
+
+class RecipeSerializer(serializers.ModelSerializer):
+    image = Base64ImageField(required=True, allow_null=True)
+    ingredients = IngredientSerializer(many=True)
+    tags = TagSerializer(many=True)
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'tags',
+            'author',
+            'ingredients',
+            'image',
+            'text',
+            'name',
+            'cooking_time'
+        )
+        read_only_fields = ('author',)
+
+
+class IngredientAmountSerializer(serializers.Serializer):
+    id = serializers.PrimaryKeyRelatedField(queryset=Ingredient.objects.all())
+    amount = serializers.IntegerField()
+
+    class Meta:
+        model = RecipeIngredients
+        fields = ('id', 'amount')
+
+
+class RecipeCreateSerializer(serializers.ModelSerializer):
+    image = Base64ImageField(required=True, allow_null=True)
+    ingredients = IngredientAmountSerializer(many=True, read_only=True)
+    tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
+                                              many=True)
+
+    class Meta:
+        model = Recipe
+        fields = (
+            'id',
+            'tags',
+            'author',
+            'ingredients',
+            'image',
+            'text',
+            'name',
+            'cooking_time'
+        )
+        read_only_fields = ('author',)
+
+    def create(self, validated_data):
+        # ingredients_data = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+
+        recipe = Recipe.objects.create(**validated_data)
+        for _ in tags:
+            recipe.tags.set(tags)
+        #
+        # for ingredient_data in ingredients_data:
+        #     print(ingredient_data)
+        #     ingredient_id = ingredient_data['id']
+        #     amount = ingredient_data['amount']
+        #     print(ingredient_id, amount)
+        #
+        #     RecipeIngredients.objects.create(
+        #         recipe=recipe,
+        #         ingredient=ingredient_id,
+        #         amount=amount
+        #     )
+
+        return recipe

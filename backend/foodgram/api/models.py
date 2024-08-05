@@ -87,9 +87,9 @@ class Recipe(models.Model):
         related_name='recipes',
         on_delete=models.CASCADE
     )
-    title = models.CharField(max_length=256)
+    name = models.CharField(max_length=256)
     image = models.ImageField(upload_to='recipes/')
-    description = models.TextField(max_length=2000)
+    text = models.TextField(max_length=2000)
     ingredients = models.ManyToManyField(
         Ingredient,
         through=RecipeIngredients
@@ -98,3 +98,16 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField()
     in_favorites = models.BooleanField(default=False)
     in_shop_list = models.BooleanField(default=False)
+
+
+class Subscribe(models.Model):
+    subscriber = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='subscriber'
+    )
+    subscribed_to = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='subscribed_to'
+    )
