@@ -3,6 +3,9 @@ from django_filters.rest_framework import DjangoFilterBackend
 from djoser import views as djoser_views
 from rest_framework import viewsets, status, permissions
 from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.decorators import action
 
 from .models import Ingredient, Recipe, Tag
 from .serializers import (
@@ -33,6 +36,13 @@ class UserViewSet(djoser_views.UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     pagination_class = LimitOffsetPagination
+
+    @action(detail=False, methods=['get'],
+            permission_classes=(IsAuthenticated,))
+    def me(self, request, *args, **kwargs):
+        user = self.request.user
+        serializer = UserSerializer(user, context={'request': request})
+        return Response(serializer.data)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
