@@ -47,11 +47,26 @@ class SubscribeSerializer(serializers.ModelSerializer):
         return data
 
 
+class AvatarSerializer(serializers.ModelSerializer):
+    avatar = Base64ImageField(required=True)
+
+    class Meta:
+        model = User
+        fields = ('avatar',)
+
+    def validate(self, data):
+        if not data.get('avatar'):
+            raise serializers.ValidationError(
+                {'avatar': 'Поле не может быть пустым!'})
+        return data
+
+
 class UserSerializer(serializers.ModelSerializer):
     username = serializers.CharField(
         validators=(username_validator,)
     )
     is_subscribed = serializers.SerializerMethodField()
+    avatar = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User

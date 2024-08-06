@@ -145,3 +145,6 @@ DJOSER = {
         'user_list': ('rest_framework.permissions.AllowAny',),
     }
 }
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'

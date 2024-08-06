@@ -9,6 +9,7 @@ from rest_framework.decorators import action
 
 from .models import Ingredient, Recipe, Tag
 from .serializers import (
+    AvatarSerializer,
     IngredientSerializer,
     RecipeCreateSerializer,
     RecipeSerializer,
@@ -37,12 +38,37 @@ class UserViewSet(djoser_views.UserViewSet):
     serializer_class = UserSerializer
     pagination_class = LimitOffsetPagination
 
-    @action(detail=False, methods=['get'],
+    @action(detail=False, methods=('get',),
             permission_classes=(IsAuthenticated,))
     def me(self, request, *args, **kwargs):
         user = self.request.user
         serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
+
+
+class AvatarViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = AvatarSerializer
+
+    @action(detail=False, methods=('put',),
+            permission_classes=[IsAuthenticated])
+    def update_avatar(self, request):
+        user = request.user
+        serializer = AvatarSerializer(user, data=request.data,
+                                      partial=True)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=('delete',),
+            permission_classes=[IsAuthenticated])
+    def delete_avatar(self, request):
+        user = request.user
+        user.avatar.delete(save=False)
+        user.avatar = None
+        user.save()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class RecipeViewSet(viewsets.ModelViewSet):
