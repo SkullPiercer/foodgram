@@ -1,7 +1,7 @@
 from rest_framework.routers import SimpleRouter
 from django.urls import include, path
 
-from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet
+from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet, SubscribeCreateView
 
 
 router = SimpleRouter()
@@ -19,5 +19,6 @@ urlpatterns = [
             'put': 'update_avatar',
             'delete': 'delete_avatar',
         }
-    ))
+    )),
+    path('users/<int:id>/subscribe/', SubscribeCreateView.as_view(), name='subscribe-create'),
 ]
