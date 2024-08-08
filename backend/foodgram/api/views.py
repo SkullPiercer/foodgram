@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
-from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
 
 from .models import Ingredient, Recipe, Tag, Subscribe, Favorite
 from .serializers import (
@@ -109,10 +109,21 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=('post',))
     def add_to_favorites(self, request, id):
-        user = request.user
         serializer = FavoriteSerializer(data={}, context={'request': request, 'view': self})
         if serializer.is_valid():
             serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors,
                         status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=('delete',))
+    def remove_from_favorites(self, request, id):
+        user = request.user
+        try:
+            recipe = get_object_or_404(Recipe, id=id)
+            favorite = Favorite.objects.get(user=user, recipe=recipe)
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Favorite.DoesNotExist:
+            return Response({'detail': 'Favorite not found.'},
+                            status=status.HTTP_400_BAD_REQUEST)

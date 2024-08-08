@@ -24,6 +24,7 @@ urlpatterns = [
     path('recipes/<int:id>/favorite/', FavoriteViewSet.as_view(
         {
             'post': 'add_to_favorites',
+            'delete': 'remove_from_favorites',
         }
     ), name='favorite_create_delete')
 ]
