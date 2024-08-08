@@ -109,6 +109,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 class RecipeSerializer(serializers.ModelSerializer):
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(read_only=True, many=True)
+    author = UserSerializer(read_only=True)
 
     def get_ingredients(self, obj):
         ingredients = IngredientAmountSerializer(
@@ -125,12 +126,23 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
+        fields = (
+            'id',
+            'tags',
+            'author',
+            'ingredients',
+            'image',
+            'text',
+            'name',
+            'cooking_time'
+        )
 
 
 class RecipeCreateSerializer(RecipeSerializer):
     image = Base64ImageField(required=True)
     cooking_time = serializers.IntegerField(
-        required=True,)
+        required=True, )
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Recipe
@@ -156,10 +168,12 @@ class RecipeCreateSerializer(RecipeSerializer):
         for ingredient_data in ingredients_data:
             unique_ingredients.add(ingredient_data['id'])
             try:
-                ingredients = Ingredient.objects.filter(id__in=unique_ingredients)
+                ingredients = Ingredient.objects.filter(
+                    id__in=unique_ingredients)
                 new_ingredients_data.append(
                     {
-                        'ingredient': ingredients.get(pk=ingredient_data['id']),
+                        'ingredient': ingredients.get(
+                            pk=ingredient_data['id']),
                         'amount': ingredient_data['amount']
                     }
                 )
