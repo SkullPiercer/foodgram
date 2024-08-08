@@ -7,8 +7,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
+from rest_framework.views import APIView
 
-from .models import Ingredient, Recipe, Tag, Subscribe
+from .models import Ingredient, Recipe, Tag, Subscribe, Favorite
 from .serializers import (
     AvatarSerializer,
     IngredientSerializer,
@@ -17,6 +18,7 @@ from .serializers import (
     TagSerializer,
     UserSerializer,
     SubscribeSerializer,
+    FavoriteSerializer
 )
 
 User = get_user_model()
@@ -99,3 +101,18 @@ class SubscribeCreateView(generics.CreateAPIView):
 
         serializer.save(subscriber=self.request.user,
                         subscribed_to=subscribed_to)
+
+
+class FavoriteViewSet(viewsets.ModelViewSet):
+    permission_classes = [permissions.IsAuthenticated]
+    queryset = Favorite.objects.all()
+
+    @action(detail=False, methods=('post',))
+    def add_to_favorites(self, request, id):
+        user = request.user
+        serializer = FavoriteSerializer(data={}, context={'request': request, 'view': self})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)

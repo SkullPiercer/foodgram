@@ -111,3 +111,16 @@ class Subscribe(models.Model):
         on_delete=models.CASCADE,
         related_name='subscribed_to'
     )
+
+
+class Favorite(models.Model):
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='favorites'
+    )
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='favorited_by'
+    )

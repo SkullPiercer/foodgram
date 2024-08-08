@@ -2,11 +2,12 @@ import base64
 
 from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.db import transaction
 
-from .models import Ingredient, Recipe, RecipeIngredients, Subscribe, Tag
+from .models import Ingredient, Recipe, RecipeIngredients, Subscribe, Tag, Favorite
 from .validators import username_validator
 
 User = get_user_model()
@@ -206,3 +207,31 @@ class RecipeCreateSerializer(RecipeSerializer):
             )
 
         return recipe
+
+
+class FavoriteSerializer(serializers.ModelSerializer):
+    recipe = RecipeSerializer(read_only=True)
+
+    class Meta:
+        model = Favorite
+        fields = ('recipe',)
+
+    def validate(self, data):
+        user = self.context['request'].user
+        recipe_id = self.context['view'].kwargs.get('id')
+
+        if Favorite.objects.filter(user=user, recipe_id=recipe_id).exists():
+            raise serializers.ValidationError('Этот рецепт уже добавлен в избранное.')
+
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        recipe_id = self.context['view'].kwargs.get('id')
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        favorite = Favorite.objects.create(user=user, recipe=recipe)
+        return favorite
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        return representation['recipe']
