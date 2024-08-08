@@ -7,7 +7,8 @@ from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 from django.db import transaction
 
-from .models import Ingredient, Recipe, RecipeIngredients, Subscribe, Tag, Favorite
+from .models import Ingredient, Recipe, RecipeIngredients, Subscribe, Tag, \
+    Favorite
 from .validators import username_validator
 
 User = get_user_model()
@@ -221,7 +222,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
         recipe_id = self.context['view'].kwargs.get('id')
 
         if Favorite.objects.filter(user=user, recipe_id=recipe_id).exists():
-            raise serializers.ValidationError('Этот рецепт уже добавлен в избранное.')
+            raise serializers.ValidationError(
+                'Этот рецепт уже добавлен в избранное.')
 
         return data
 
@@ -233,5 +235,10 @@ class FavoriteSerializer(serializers.ModelSerializer):
         return favorite
 
     def to_representation(self, instance):
-        representation = super().to_representation(instance)
-        return representation['recipe']
+        recipe = instance.recipe
+        return {
+            'id': recipe.id,
+            'name': recipe.name,
+            'image': recipe.image.url,
+            'cooking_time': recipe.cooking_time
+        }
