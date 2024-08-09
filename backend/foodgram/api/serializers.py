@@ -31,6 +31,8 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
+    measurement_unit = serializers.CharField(source='measurement_unit.title',
+                                             read_only=True)
     class Meta:
         model = Ingredient
         fields = ['id', 'name', 'measurement_unit']
