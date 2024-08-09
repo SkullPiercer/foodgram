@@ -4,11 +4,15 @@ from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
-from rest_framework.exceptions import ValidationError
-from django.db import transaction
 
-from .models import Ingredient, Recipe, RecipeIngredients, Subscribe, Tag, \
+from .models import(
+    Ingredient,
+    Recipe,
+    RecipeIngredients,
+    Subscribe,
+    Tag,
     Favorite
+)
 from .validators import username_validator
 
 User = get_user_model()
@@ -33,6 +37,7 @@ class TagSerializer(serializers.ModelSerializer):
 class IngredientSerializer(serializers.ModelSerializer):
     measurement_unit = serializers.CharField(source='measurement_unit.title',
                                              read_only=True)
+
     class Meta:
         model = Ingredient
         fields = ['id', 'name', 'measurement_unit']
@@ -125,7 +130,8 @@ class RecipeSerializer(serializers.ModelSerializer):
                 'id': ingredient['ingredient']['id'],
                 'amount': ingredient['amount'],
                 'name': ingredient['ingredient']['name'],
-                'measurement_unit': ingredient['ingredient']['measurement_unit']
+                'measurement_unit': ingredient['ingredient'][
+                    'measurement_unit']
             }
             format_ingredients.append(formatted_ingredient)
         return format_ingredients
@@ -149,6 +155,7 @@ class RecipeCreateSerializer(RecipeSerializer):
     cooking_time = serializers.IntegerField(
         required=True, )
     author = UserSerializer(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -160,9 +167,17 @@ class RecipeCreateSerializer(RecipeSerializer):
             'image',
             'text',
             'name',
-            'cooking_time'
+            'cooking_time',
+            'is_favorited'
         )
-        read_only_fields = ('author',)
+        read_only_fields = ('author', 'is_favorited',)
+
+    def get_is_favorited(self, obj):
+        request = self.context.get('request', None)
+        if request is None or not request.user.is_authenticated:
+            return False
+        return Favorite.objects.filter(recipe=obj,
+                                        user=request.user).exists()
 
     def validate(self, data):
         data = super().validate(data)
