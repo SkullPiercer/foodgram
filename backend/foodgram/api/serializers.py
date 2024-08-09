@@ -122,6 +122,8 @@ class RecipeSerializer(serializers.ModelSerializer):
             formatted_ingredient = {
                 'id': ingredient['ingredient']['id'],
                 'amount': ingredient['amount'],
+                'name': ingredient['ingredient']['name'],
+                'measurement_unit': ingredient['ingredient']['measurement_unit']
             }
             format_ingredients.append(formatted_ingredient)
         return format_ingredients
