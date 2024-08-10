@@ -198,9 +198,9 @@ class RecipeCreateSerializer(RecipeSerializer):
         new_ingredients_data = []
 
         # Проверка валидности тегов
-        if len(tags_data) == 0:
+        if len(tags_data) == 0 or len(set(tags_data)) < len(tags_data):
             raise serializers.ValidationError(
-                {'tags': 'Укажите теги.'}
+                {'tags': 'Неверно указаны теги.'}
             )
         for tag in tags_data:
             if not Tag.objects.filter(id=tag).exists():
