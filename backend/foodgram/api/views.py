@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
-from .models import Ingredient, Recipe, Tag, Subscribe, Favorite
+from .models import Ingredient, Recipe, Tag, Subscribe, Favorite, ShopList
 from .serializers import (
     AvatarSerializer,
     IngredientSerializer,
@@ -18,7 +18,8 @@ from .serializers import (
     TagSerializer,
     UserSerializer,
     SubscribeSerializer,
-    FavoriteSerializer
+    FavoriteSerializer,
+    ShopListSerializer,
 )
 
 User = get_user_model()
@@ -126,4 +127,30 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Favorite.DoesNotExist:
             return Response({'detail': 'Favorite not found.'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+
+class ShopViewSet(viewsets.ModelViewSet):
+    permission_classes = (permissions.IsAuthenticated,)
+    queryset = ShopList.objects.all()
+
+    @action(detail=False, methods=('post',))
+    def add_to_shop_list(self, request, id):
+        serializer = ShopListSerializer(data={}, context={'request': request, 'view': self})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors,
+                        status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=('delete',))
+    def remove_from_shop_list(self, request, id):
+        user = request.user
+        try:
+            recipe = get_object_or_404(Recipe, id=id)
+            favorite = ShopList.objects.get(user=user, recipe=recipe)
+            favorite.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except ShopList.DoesNotExist:
+            return Response({'detail': 'Recipe not in shop list.'},
                             status=status.HTTP_400_BAD_REQUEST)

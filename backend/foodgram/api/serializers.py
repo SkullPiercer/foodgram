@@ -5,13 +5,14 @@ from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
 from rest_framework import serializers
 
-from .models import(
+from .models import (
     Ingredient,
     Recipe,
     RecipeIngredients,
     Subscribe,
     Tag,
-    Favorite
+    Favorite,
+    ShopList
 )
 from .validators import username_validator
 
@@ -177,7 +178,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         if request is None or not request.user.is_authenticated:
             return False
         return Favorite.objects.filter(recipe=obj,
-                                        user=request.user).exists()
+                                       user=request.user).exists()
 
     def validate(self, data):
         data = super().validate(data)
@@ -252,6 +253,39 @@ class FavoriteSerializer(serializers.ModelSerializer):
         recipe = get_object_or_404(Recipe, id=recipe_id)
         favorite = Favorite.objects.create(user=user, recipe=recipe)
         return favorite
+
+    def to_representation(self, instance):
+        recipe = instance.recipe
+        return {
+            'id': recipe.id,
+            'name': recipe.name,
+            'image': recipe.image.url,
+            'cooking_time': recipe.cooking_time
+        }
+
+
+class ShopListSerializer(serializers.ModelSerializer):
+    recipe = RecipeSerializer(read_only=True)
+
+    class Meta:
+        model = ShopList
+        fields = ('recipe',)
+
+    def validate(self, data):
+        user = self.context['request'].user
+        recipe_id = self.context['view'].kwargs.get('id')
+
+        if ShopList.objects.filter(user=user, recipe=recipe_id).exists():
+            raise serializers.ValidationError(
+                'Этот рецепт уже добавлен в список покупок.')
+        return data
+
+    def create(self, validated_data):
+        user = self.context['request'].user
+        recipe_id = self.context['view'].kwargs.get('id')
+        recipe = get_object_or_404(Recipe, id=recipe_id)
+        shop = ShopList.objects.create(user=user, recipe=recipe)
+        return shop
 
     def to_representation(self, instance):
         recipe = instance.recipe

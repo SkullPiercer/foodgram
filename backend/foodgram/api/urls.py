@@ -1,7 +1,7 @@
 from rest_framework.routers import SimpleRouter
 from django.urls import include, path
 
-from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet, SubscribeCreateView, FavoriteViewSet
+from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet, SubscribeCreateView, FavoriteViewSet, ShopViewSet
 
 
 router = SimpleRouter()
@@ -26,5 +26,13 @@ urlpatterns = [
             'post': 'add_to_favorites',
             'delete': 'remove_from_favorites',
         }
-    ), name='favorite_create_delete')
+    ), name='favorite_create_delete'),
+
+    path('recipes/<int:id>/shopping_cart/', ShopViewSet.as_view(
+        {
+            'post': 'add_to_shop_list',
+            'delete': 'remove_from_shop_list',
+        }
+    ), name='shop_list_create_delete'),
+
 ]
