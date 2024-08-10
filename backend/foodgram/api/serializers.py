@@ -202,6 +202,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         unique_ingredients = set()
         new_ingredients_data = []
 
+        validate_tags(tags_data)
         validate_ingredients(ingredients_data)
         validate_cooking_time(request.data.get('cooking_time'))
 
@@ -224,7 +225,7 @@ class RecipeCreateSerializer(RecipeSerializer):
                 )
 
             data['ingredients'] = new_ingredients_data
-            data['tags'] = validate_tags(tags_data)
+            data['tags'] = tags_data
         return data
 
     def create(self, validated_data):

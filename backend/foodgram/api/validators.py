@@ -10,7 +10,14 @@ username_validator = RegexValidator(
 
 def validate_tags(tags_data):
     from .models import Tag
-    if len(tags_data) == 0 or len(set(tags_data)) < len(tags_data):
+    if tags_data is None:
+        raise serializers.ValidationError(
+            {'tags': 'Укажите теги.'}
+        )
+    if (
+        len(tags_data) == 0
+        or len(set(tags_data)) < len(tags_data)
+    ):
         raise serializers.ValidationError(
             {'tags': 'Неверно указаны теги.'}
         )
