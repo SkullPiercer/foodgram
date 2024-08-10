@@ -196,6 +196,18 @@ class RecipeCreateSerializer(RecipeSerializer):
         ingredients_data = request.data.get('ingredients')
         unique_ingredients = set()
         new_ingredients_data = []
+
+        # Проверка валидности тегов
+        if len(tags_data) == 0:
+            raise serializers.ValidationError(
+                {'tags': 'Укажите теги.'}
+            )
+        for tag in tags_data:
+            if not Tag.objects.filter(id=tag).exists():
+                raise serializers.ValidationError(
+                    {'tags': 'Несуществующий тег.'}
+                )
+        # Проверка валидности ингредиентов
         for ingredient_data in ingredients_data:
             unique_ingredients.add(ingredient_data['id'])
             try:
@@ -212,6 +224,7 @@ class RecipeCreateSerializer(RecipeSerializer):
                 raise serializers.ValidationError(
                     {'ingredients': ['Несуществующий ингредиент.']}
                 )
+
             data['ingredients'] = new_ingredients_data
             data['tags'] = tags_data
         return data
