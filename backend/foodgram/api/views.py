@@ -148,8 +148,8 @@ class ShopViewSet(viewsets.ModelViewSet):
         user = request.user
         try:
             recipe = get_object_or_404(Recipe, id=id)
-            favorite = ShopList.objects.get(user=user, recipe=recipe)
-            favorite.delete()
+            shop = ShopList.objects.get(user=user, recipe=recipe)
+            shop.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ShopList.DoesNotExist:
             return Response({'detail': 'Recipe not in shop list.'},
