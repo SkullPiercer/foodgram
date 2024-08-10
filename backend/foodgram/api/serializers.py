@@ -157,6 +157,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         required=True, )
     author = UserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     class Meta:
         model = Recipe
@@ -169,9 +170,17 @@ class RecipeCreateSerializer(RecipeSerializer):
             'text',
             'name',
             'cooking_time',
-            'is_favorited'
+            'is_favorited',
+            'is_in_shopping_cart'
         )
         read_only_fields = ('author', 'is_favorited',)
+
+    def get_is_in_shopping_cart(self, obj):
+        request = self.context.get('request', None)
+        if request is None or not request.user.is_authenticated:
+            return False
+        return ShopList.objects.filter(recipe=obj,
+                                       user=request.user).exists()
 
     def get_is_favorited(self, obj):
         request = self.context.get('request', None)
