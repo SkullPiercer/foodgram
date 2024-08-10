@@ -28,3 +28,9 @@ def validate_cooking_time(time):
             {'cooking_time': 'Невозможное время приготовления.'}
         )
 
+
+def validate_ingredients(ingredient_list):
+    if ingredient_list is None or len(ingredient_list) == 0:
+        raise serializers.ValidationError(
+            {'ingredients': 'Неверно переданы ингредиенты!'}
+        )

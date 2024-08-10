@@ -14,7 +14,12 @@ from .models import (
     Favorite,
     ShopList
 )
-from .validators import username_validator, validate_tags, validate_cooking_time
+from .validators import (
+    username_validator,
+    validate_tags,
+    validate_cooking_time,
+    validate_ingredients,
+)
 
 User = get_user_model()
 
@@ -197,6 +202,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         unique_ingredients = set()
         new_ingredients_data = []
 
+        validate_ingredients(ingredients_data)
         validate_cooking_time(request.data.get('cooking_time'))
 
         # Проверка валидности ингредиентов
