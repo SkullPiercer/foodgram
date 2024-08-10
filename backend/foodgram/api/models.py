@@ -124,3 +124,17 @@ class Favorite(models.Model):
         on_delete=models.CASCADE,
         related_name='favorited_by'
     )
+
+
+class ShopList(models.Model):
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        related_name='shop_user'
+    )
+
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='shop_recipe'
+    )
