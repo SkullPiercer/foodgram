@@ -14,7 +14,7 @@ from .models import (
     Favorite,
     ShopList
 )
-from .validators import username_validator
+from .validators import username_validator, validate_tags, validate_cooking_time
 
 User = get_user_model()
 
@@ -197,16 +197,8 @@ class RecipeCreateSerializer(RecipeSerializer):
         unique_ingredients = set()
         new_ingredients_data = []
 
-        # Проверка валидности тегов
-        if len(tags_data) == 0 or len(set(tags_data)) < len(tags_data):
-            raise serializers.ValidationError(
-                {'tags': 'Неверно указаны теги.'}
-            )
-        for tag in tags_data:
-            if not Tag.objects.filter(id=tag).exists():
-                raise serializers.ValidationError(
-                    {'tags': 'Несуществующий тег.'}
-                )
+        validate_cooking_time(request.data.get('cooking_time'))
+
         # Проверка валидности ингредиентов
         for ingredient_data in ingredients_data:
             unique_ingredients.add(ingredient_data['id'])
@@ -226,7 +218,7 @@ class RecipeCreateSerializer(RecipeSerializer):
                 )
 
             data['ingredients'] = new_ingredients_data
-            data['tags'] = tags_data
+            data['tags'] = validate_tags(tags_data)
         return data
 
     def create(self, validated_data):
