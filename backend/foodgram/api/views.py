@@ -79,7 +79,9 @@ class AvatarViewSet(viewsets.ModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     pagination_class = LimitOffsetPagination
-    
+    filter_backends = (DjangoFilterBackend,)
+    filterset_fields = ('author',)
+
     def get_serializer_class(self):
         if self.action == 'create':
             return RecipeCreateSerializer
