@@ -23,8 +23,6 @@ from .validators import (
     validate_ingredients,
 )
 
-
-
 User = get_user_model()
 
 
@@ -129,6 +127,8 @@ class RecipeSerializer(serializers.ModelSerializer, RecipeMixin):
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(read_only=True, many=True)
     author = UserSerializer(read_only=True)
+    is_favorited = serializers.SerializerMethodField()
+    is_in_shopping_cart = serializers.SerializerMethodField()
 
     def get_ingredients(self, obj):
         ingredients = IngredientAmountSerializer(
@@ -156,7 +156,9 @@ class RecipeSerializer(serializers.ModelSerializer, RecipeMixin):
             'image',
             'text',
             'name',
-            'cooking_time'
+            'cooking_time',
+            'is_favorited',
+            'is_in_shopping_cart'
         )
 
 
@@ -182,8 +184,7 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
             'is_favorited',
             'is_in_shopping_cart'
         )
-        read_only_fields = ('author', 'is_favorited',)
-
+        read_only_fields = ('author', 'is_favorited', 'is_in_shopping_cart',)
 
     def validate(self, data):
         data = super().validate(data)
