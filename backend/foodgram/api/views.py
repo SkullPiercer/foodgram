@@ -20,6 +20,7 @@ from .serializers import (
     SubscribeSerializer,
     FavoriteSerializer,
     ShopListSerializer,
+    ShortURLSerializer
 )
 
 User = get_user_model()
@@ -157,3 +158,9 @@ class ShopViewSet(viewsets.ModelViewSet):
         except ShopList.DoesNotExist:
             return Response({'detail': 'Recipe not in shop list.'},
                             status=status.HTTP_400_BAD_REQUEST)
+
+
+class RecipeShortURL(generics.RetrieveAPIView):
+    queryset = Recipe.objects.all()
+    serializer_class = ShortURLSerializer
+    lookup_field = 'id'

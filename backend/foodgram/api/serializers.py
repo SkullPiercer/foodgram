@@ -3,6 +3,7 @@ import base64
 from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
 from django.shortcuts import get_object_or_404
+from django_short_url.views import get_surl
 from rest_framework import serializers
 
 from .models import (
@@ -308,3 +309,22 @@ class ShopListSerializer(serializers.ModelSerializer):
             'image': recipe.image.url,
             'cooking_time': recipe.cooking_time
         }
+
+
+class ShortURLSerializer(serializers.ModelSerializer):
+    short_url = serializers.SerializerMethodField(source='short-link')
+
+    class Meta:
+        model = Recipe
+        fields = ('short_url',)
+
+    def get_short_url(self, obj):
+        request = self.context.get('request')
+        if request and request.resolver_match:
+            recipe_id = request.resolver_match.kwargs.get('id')
+            return get_surl(f"api/recipes/{recipe_id}/")
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation['short-link'] = representation.pop('short_url')
+        return representation

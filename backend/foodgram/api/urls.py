@@ -1,7 +1,7 @@
 from rest_framework.routers import SimpleRouter
 from django.urls import include, path
 
-from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet, SubscribeCreateView, FavoriteViewSet, ShopViewSet
+from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet, SubscribeCreateView, FavoriteViewSet, ShopViewSet, RecipeShortURL
 
 
 router = SimpleRouter()
@@ -34,5 +34,5 @@ urlpatterns = [
             'delete': 'remove_from_shop_list',
         }
     ), name='shop_list_create_delete'),
-
+    path('recipes/<int:id>/get-link/', RecipeShortURL.as_view(), name='shor_url')
 ]
