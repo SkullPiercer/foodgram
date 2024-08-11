@@ -14,12 +14,16 @@ from .models import (
     Favorite,
     ShopList
 )
+from .mixins import RecipeMixin
+
 from .validators import (
     username_validator,
     validate_tags,
     validate_cooking_time,
     validate_ingredients,
 )
+
+
 
 User = get_user_model()
 
@@ -121,7 +125,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         exclude = ['recipe']
 
 
-class RecipeSerializer(serializers.ModelSerializer):
+class RecipeSerializer(serializers.ModelSerializer, RecipeMixin):
     ingredients = serializers.SerializerMethodField()
     tags = TagSerializer(read_only=True, many=True)
     author = UserSerializer(read_only=True)
@@ -156,7 +160,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         )
 
 
-class RecipeCreateSerializer(RecipeSerializer):
+class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
     image = Base64ImageField(required=True)
     cooking_time = serializers.IntegerField(
         required=True, )
@@ -180,19 +184,6 @@ class RecipeCreateSerializer(RecipeSerializer):
         )
         read_only_fields = ('author', 'is_favorited',)
 
-    def get_is_in_shopping_cart(self, obj):
-        request = self.context.get('request', None)
-        if request is None or not request.user.is_authenticated:
-            return False
-        return ShopList.objects.filter(recipe=obj,
-                                       user=request.user).exists()
-
-    def get_is_favorited(self, obj):
-        request = self.context.get('request', None)
-        if request is None or not request.user.is_authenticated:
-            return False
-        return Favorite.objects.filter(recipe=obj,
-                                       user=request.user).exists()
 
     def validate(self, data):
         data = super().validate(data)

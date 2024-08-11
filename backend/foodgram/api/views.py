@@ -78,7 +78,8 @@ class AvatarViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-
+    pagination_class = LimitOffsetPagination
+    
     def get_serializer_class(self):
         if self.action == 'create':
             return RecipeCreateSerializer
