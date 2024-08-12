@@ -199,7 +199,6 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
         validate_ingredients(ingredients_data)
         validate_cooking_time(request.data.get('cooking_time'))
 
-        # Проверка валидности ингредиентов
         for ingredient_data in ingredients_data:
             unique_ingredients.add(ingredient_data['id'])
             try:
@@ -322,7 +321,8 @@ class ShortURLSerializer(serializers.ModelSerializer):
         request = self.context.get('request')
         if request and request.resolver_match:
             recipe_id = request.resolver_match.kwargs.get('id')
-            return get_surl(f"api/recipes/{recipe_id}/")
+            surl = get_surl(f"/api/recipes/{recipe_id}/")
+            return f'{request.scheme}://{request.get_host()}{surl}'
 
     def to_representation(self, instance):
         representation = super().to_representation(instance)

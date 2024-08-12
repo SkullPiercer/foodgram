@@ -149,3 +149,5 @@ DJOSER = {
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+
+DJANGO_SHORT_URL_REDIRECT_URL = ''
