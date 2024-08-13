@@ -242,6 +242,27 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
 
         return recipe
 
+    def update(self, instance, validated_data):
+        ingredients_data = validated_data.pop('ingredients')
+        tags = validated_data.pop('tags')
+
+        instance.ingredients.clear()
+
+        for _ in tags:
+            instance.tags.set(tags)
+
+        for ingredient_data in ingredients_data:
+            ingredient = ingredient_data['ingredient']
+            amount = ingredient_data['amount']
+
+            RecipeIngredients.objects.create(
+                ingredient_id=ingredient.id,
+                recipe_id=instance.id,
+                amount=amount
+
+            )
+        return super().update(instance, validated_data)
+
 
 class FavoriteSerializer(serializers.ModelSerializer):
     recipe = RecipeSerializer(read_only=True)

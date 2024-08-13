@@ -22,6 +22,7 @@ from .serializers import (
     ShopListSerializer,
     ShortURLSerializer
 )
+from .permissions import Author
 
 User = get_user_model()
 
@@ -79,12 +80,13 @@ class AvatarViewSet(viewsets.ModelViewSet):
 
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
+    permission_classes = (Author, permissions.IsAuthenticatedOrReadOnly)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
     filterset_fields = ('author',)
 
     def get_serializer_class(self):
-        if self.action in ('create', 'patch'):
+        if self.action in ('create', 'partial_update'):
             return RecipeCreateSerializer
         return RecipeSerializer
 

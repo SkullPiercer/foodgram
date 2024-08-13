@@ -37,4 +37,6 @@ urlpatterns = [
             'delete': 'remove_from_shop_list',
         }
     ), name='shop_list_create_delete'),
+    path('recipes/<int:id>/get-link/', RecipeShortURL.as_view(), name='shor_url'),
+
 ]
