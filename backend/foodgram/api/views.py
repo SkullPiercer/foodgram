@@ -52,16 +52,31 @@ class UserViewSet(djoser_views.UserViewSet):
         serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=True, methods=('post',),
+    @action(detail=True, methods=('post','delete'),
             permission_classes=(IsAuthenticated,))
     def subscribe(self, request, id):
         user = request.user
-        data = {'subscriber': user.id, 'subscribed_to': id}
-        serializer = SubscribeCreateSerializer(data=data, context={'request': request, 'view': self})
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        subscribed_to = get_object_or_404(User, pk=id)
+
+        if request.method == 'POST':
+            data = {'subscriber': user.id, 'subscribed_to': id}
+            serializer = SubscribeCreateSerializer(data=data,
+                                                   context={'request': request,
+                                                            'view': self})
+            if serializer.is_valid():
+                serializer.save()
+                return Response(serializer.data, status=status.HTTP_200_OK)
+            return Response(serializer.errors,
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        elif request.method == 'DELETE':
+            subscription = Subscribe.objects.filter(subscriber=user,
+                                                    subscribed_to=subscribed_to).first()
+            if subscription:
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response({"detail": "Subscribe not found."},
+                            status=status.HTTP_404_NOT_FOUND)
 
 
 class AvatarViewSet(viewsets.ModelViewSet):
