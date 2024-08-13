@@ -54,24 +54,25 @@ class IngredientSerializer(serializers.ModelSerializer):
         extra_kwargs = {'measurement_unit': {'read_only': True}}
 
 
-# Подумать надо ли разделить создание, удаление и список на разные сирики
 class SubscribeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscribe
         fields = ('subscriber', 'subscribed_to')
+        read_only_fields = ('subscriber', 'subscribed_to')
 
     def validate(self, data):
-        subscriber = data['subscriber']
-        subscribed_to = data['subscribed_to']
+        user = self.context['request'].user.id
+        subscribed_to_id = self.context['view'].kwargs.get('id')
 
-        if subscriber == subscribed_to:
+        if user == subscribed_to_id:
             raise serializers.ValidationError(
                 "Нельзя подписаться на себя!")
 
-        if Subscribe.objects.filter(subscriber=subscriber,
-                                    subscribed_to=subscribed_to).exists():
+        if Subscribe.objects.filter(subscriber=user,
+                                    subscribed_to=subscribed_to_id).exists():
             raise serializers.ValidationError(
                 "Вы уже подписаны на этого пользователя!")
+
         return data
 
 
