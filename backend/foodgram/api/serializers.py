@@ -54,25 +54,28 @@ class IngredientSerializer(serializers.ModelSerializer):
         extra_kwargs = {'measurement_unit': {'read_only': True}}
 
 
-class SubscribeSerializer(serializers.ModelSerializer):
+class SubscribeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscribe
         fields = ('subscriber', 'subscribed_to')
         read_only_fields = ('subscriber', 'subscribed_to')
 
     def validate(self, data):
-        user = self.context['request'].user.id
+        subscriber = self.context['request'].user
         subscribed_to_id = self.context['view'].kwargs.get('id')
+        subscribed_to = get_object_or_404(User, pk=subscribed_to_id)
 
-        if user == subscribed_to_id:
+        if subscriber == subscribed_to:
             raise serializers.ValidationError(
                 "Нельзя подписаться на себя!")
 
-        if Subscribe.objects.filter(subscriber=user,
-                                    subscribed_to=subscribed_to_id).exists():
+        if Subscribe.objects.filter(subscriber=subscriber,
+                                    subscribed_to=subscribed_to).exists():
             raise serializers.ValidationError(
                 "Вы уже подписаны на этого пользователя!")
 
+        data['subscriber'] = subscriber
+        data['subscribed_to'] = subscribed_to
         return data
 
 

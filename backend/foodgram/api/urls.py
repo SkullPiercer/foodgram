@@ -4,7 +4,7 @@ from django.urls import include, path, re_path
 
 from django_short_url import views as surl_views
 
-from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet, SubscribeCreateView, FavoriteViewSet, ShopViewSet, RecipeShortURL
+from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet, FavoriteViewSet, ShopViewSet, RecipeShortURL
 
 
 router = SimpleRouter()
@@ -23,7 +23,6 @@ urlpatterns = [
             'delete': 'delete_avatar',
         }
     )),
-    path('users/<int:id>/subscribe/', SubscribeCreateView.as_view(), name='subscribe_create'),
     path('recipes/<int:id>/favorite/', FavoriteViewSet.as_view(
         {
             'post': 'add_to_favorites',

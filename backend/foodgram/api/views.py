@@ -17,7 +17,7 @@ from .serializers import (
     RecipeSerializer,
     TagSerializer,
     UserSerializer,
-    SubscribeSerializer,
+    SubscribeCreateSerializer,
     FavoriteSerializer,
     ShopListSerializer,
     ShortURLSerializer
@@ -52,13 +52,24 @@ class UserViewSet(djoser_views.UserViewSet):
         serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
+    @action(detail=True, methods=('post',),
+            permission_classes=(IsAuthenticated,))
+    def subscribe(self, request, id):
+        user = request.user
+        data = {'subscriber': user.id, 'subscribed_to': id}
+        serializer = SubscribeCreateSerializer(data=data, context={'request': request, 'view': self})
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class AvatarViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
     serializer_class = AvatarSerializer
 
     @action(detail=False, methods=('put',),
-            permission_classes=[IsAuthenticated])
+            permission_classes=(IsAuthenticated,))
     def update_avatar(self, request):
         user = request.user
         serializer = AvatarSerializer(user, data=request.data,
@@ -94,29 +105,14 @@ class RecipeViewSet(viewsets.ModelViewSet):
         serializer.save(author=self.request.user)
 
 
-class SubscribeCreateView(generics.CreateAPIView):
-    queryset = Subscribe.objects.all()
-    serializer_class = SubscribeSerializer
-    permission_classes = (IsAuthenticated,)
-
-    def perform_create(self, serializer):
-        subscribed_to_id = self.kwargs.get('id')
-        try:
-            subscribed_to = User.objects.get(id=subscribed_to_id)
-        except User.DoesNotExist:
-            raise ValidationError("User does not exist.")
-
-        serializer.save(subscriber=self.request.user,
-                        subscribed_to=subscribed_to)
-
-
 class FavoriteViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     queryset = Favorite.objects.all()
 
     @action(detail=False, methods=('post',))
     def add_to_favorites(self, request, id):
-        serializer = FavoriteSerializer(data={}, context={'request': request, 'view': self})
+        serializer = FavoriteSerializer(data={}, context={'request': request,
+                                                          'view': self})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
@@ -142,7 +138,8 @@ class ShopViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=('post',))
     def add_to_shop_list(self, request, id):
-        serializer = ShopListSerializer(data={}, context={'request': request, 'view': self})
+        serializer = ShopListSerializer(data={}, context={'request': request,
+                                                          'view': self})
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
