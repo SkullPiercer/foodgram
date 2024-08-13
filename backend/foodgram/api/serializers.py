@@ -54,6 +54,12 @@ class IngredientSerializer(serializers.ModelSerializer):
         extra_kwargs = {'measurement_unit': {'read_only': True}}
 
 
+class RecipeMiniSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Recipe
+        fields = ('id', 'name', 'image', 'cooking_time')
+
+
 class SubscribeCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Subscribe
@@ -77,6 +83,10 @@ class SubscribeCreateSerializer(serializers.ModelSerializer):
         data['subscriber'] = subscriber
         data['subscribed_to'] = subscribed_to
         return data
+
+    def to_representation(self, instance):
+        user = instance.subscribed_to
+        return SubscribeListSerializer(user, context=self.context).data
 
 
 class AvatarSerializer(serializers.ModelSerializer):
@@ -118,6 +128,25 @@ class UserSerializer(serializers.ModelSerializer):
             return False
         return Subscribe.objects.filter(subscribed_to=obj,
                                         subscriber=request.user).exists()
+
+
+class SubscribeListSerializer(UserSerializer):
+    recipes = serializers.SerializerMethodField()
+    recipes_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model = User
+        fields = UserSerializer.Meta.fields + ('recipes', 'recipes_count')
+
+    def get_recipes(self, obj):
+        recipes = obj.recipes.all()
+        limit = self.context.get('request').GET.get('recipes_limit')
+        if limit:
+            recipes = recipes[:int(limit)]
+        return RecipeMiniSerializer(recipes, many=True, read_only=True).data
+
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
 
 class IngredientAmountSerializer(serializers.ModelSerializer):

@@ -20,7 +20,8 @@ from .serializers import (
     SubscribeCreateSerializer,
     FavoriteSerializer,
     ShopListSerializer,
-    ShortURLSerializer
+    ShortURLSerializer,
+    SubscribeListSerializer,
 )
 from .permissions import Author
 
@@ -52,7 +53,17 @@ class UserViewSet(djoser_views.UserViewSet):
         serializer = UserSerializer(user, context={'request': request})
         return Response(serializer.data)
 
-    @action(detail=True, methods=('post','delete'),
+    @action(detail=False, methods=('get',),
+            permission_classes=(IsAuthenticated,))
+    def subscriptions(self, request):
+        data = User.objects.filter(subscribed_to__subscriber=self.request.user)
+        page = self.paginate_queryset(data)
+        serializer = SubscribeListSerializer(page, many=True,
+                                        context={'request': request})
+        return self.get_paginated_response(serializer.data)
+
+
+    @action(detail=True, methods=('post', 'delete'),
             permission_classes=(IsAuthenticated,))
     def subscribe(self, request, id):
         user = request.user
@@ -65,18 +76,15 @@ class UserViewSet(djoser_views.UserViewSet):
                                                             'view': self})
             if serializer.is_valid():
                 serializer.save()
-                return Response(serializer.data, status=status.HTTP_200_OK)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
             return Response(serializer.errors,
                             status=status.HTTP_400_BAD_REQUEST)
 
         elif request.method == 'DELETE':
-            subscription = Subscribe.objects.filter(subscriber=user,
-                                                    subscribed_to=subscribed_to).first()
-            if subscription:
-                subscription.delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            return Response({"detail": "Subscribe not found."},
-                            status=status.HTTP_404_NOT_FOUND)
+            subscription = get_object_or_404(Subscribe, subscriber=user,
+                                             subscribed_to=subscribed_to)
+            subscription.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
 
 
 class AvatarViewSet(viewsets.ModelViewSet):
