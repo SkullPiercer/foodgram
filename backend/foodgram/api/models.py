@@ -129,18 +129,12 @@ class Recipe(models.Model):
     cooking_time = models.PositiveIntegerField(
         verbose_name='Время приготовления'
     )
-    in_favorites = models.BooleanField(
-        default=False,
-        verbose_name='В избранном'
-    )
-    in_shop_list = models.BooleanField(
-        default=False,
-        verbose_name='В списке покупок'
-    )
+    created = models.DateTimeField(auto_now_add=True, verbose_name='Создано в')
 
     class Meta:
         verbose_name = 'Рецепт'
         verbose_name_plural = 'Рецепты'
+        ordering = ('-created',)
 
     def __str__(self):
         return self.name

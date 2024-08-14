@@ -7,10 +7,9 @@ from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.decorators import action
-from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientsFilter
 from .models import Ingredient, Recipe, Tag, Subscribe, Favorite, ShopList, RecipeIngredients
 from .serializers import (
     AvatarSerializer,
@@ -40,7 +39,7 @@ class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('name',)
+    filterset_class = IngredientsFilter
 
 
 class UserViewSet(djoser_views.UserViewSet):
@@ -119,7 +118,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
     permission_classes = (Author, permissions.IsAuthenticatedOrReadOnly)
     pagination_class = LimitOffsetPagination
     filter_backends = (DjangoFilterBackend,)
-    filterset_fields = ('author',)
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ('create', 'partial_update'):
@@ -144,7 +143,8 @@ class RecipeViewSet(viewsets.ModelViewSet):
         ingredients_summary = {}
         for item in shop_list:
             recipe_ingredients = RecipeIngredients.objects.filter(
-                recipe=item.recipe)
+                recipe=item.recipe
+            )
             for recipe_ingredient in recipe_ingredients:
                 ingredient_name = recipe_ingredient.ingredient.name
                 quantity = recipe_ingredient.amount
