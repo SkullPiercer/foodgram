@@ -1,27 +1,27 @@
 import base64
 
-from django.core.files.base import ContentFile
 from django.contrib.auth import get_user_model
+from django.core.files.base import ContentFile
 from django.shortcuts import get_object_or_404
 from django_short_url.views import get_surl
 from rest_framework import serializers
 
 from .models import (
+    Favorite,
     Ingredient,
     Recipe,
     RecipeIngredients,
     Subscribe,
     Tag,
-    Favorite,
     ShopList
 )
 from .mixins import RecipeMixin
 
 from .validators import (
     username_validator,
-    validate_tags,
     validate_cooking_time,
     validate_ingredients,
+    validate_tags,
 )
 
 User = get_user_model()
@@ -44,8 +44,10 @@ class TagSerializer(serializers.ModelSerializer):
 
 
 class IngredientSerializer(serializers.ModelSerializer):
-    measurement_unit = serializers.CharField(source='measurement_unit.title',
-                                             read_only=True)
+    measurement_unit = serializers.CharField(
+        source='measurement_unit.title',
+        read_only=True
+    )
 
     class Meta:
         model = Ingredient
@@ -72,13 +74,15 @@ class SubscribeCreateSerializer(serializers.ModelSerializer):
         subscribed_to = get_object_or_404(User, pk=subscribed_to_id)
 
         if subscriber == subscribed_to:
-            raise serializers.ValidationError(
-                "Нельзя подписаться на себя!")
+            raise serializers.ValidationError("Нельзя подписаться на себя!")
 
-        if Subscribe.objects.filter(subscriber=subscriber,
-                                    subscribed_to=subscribed_to).exists():
+        if Subscribe.objects.filter(
+            subscriber=subscriber,
+            subscribed_to=subscribed_to
+        ).exists():
             raise serializers.ValidationError(
-                "Вы уже подписаны на этого пользователя!")
+                "Вы уже подписаны на этого пользователя!"
+            )
 
         data['subscriber'] = subscriber
         data['subscribed_to'] = subscribed_to
@@ -126,8 +130,10 @@ class UserSerializer(serializers.ModelSerializer):
         request = self.context.get('request', None)
         if request is None or request.user.is_anonymous or request.user == obj:
             return False
-        return Subscribe.objects.filter(subscribed_to=obj,
-                                        subscriber=request.user).exists()
+        return Subscribe.objects.filter(
+            subscribed_to=obj,
+            subscriber=request.user
+        ).exists()
 
 
 class SubscribeListSerializer(UserSerializer):
@@ -154,7 +160,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = RecipeIngredients
-        exclude = ['recipe']
+        exclude = ('recipe',)
 
 
 class RecipeSerializer(serializers.ModelSerializer, RecipeMixin):
@@ -198,8 +204,7 @@ class RecipeSerializer(serializers.ModelSerializer, RecipeMixin):
 
 class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
     image = Base64ImageField(required=True)
-    cooking_time = serializers.IntegerField(
-        required=True, )
+    cooking_time = serializers.IntegerField(required=True)
     author = UserSerializer(read_only=True)
     is_favorited = serializers.SerializerMethodField()
     is_in_shopping_cart = serializers.SerializerMethodField()
@@ -310,7 +315,8 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
         if Favorite.objects.filter(user=user, recipe_id=recipe_id).exists():
             raise serializers.ValidationError(
-                'Этот рецепт уже добавлен в избранное.')
+              'Этот рецепт уже добавлен в избранное.'
+            )
 
         return data
 
@@ -344,7 +350,8 @@ class ShopListSerializer(serializers.ModelSerializer):
 
         if ShopList.objects.filter(user=user, recipe=recipe_id).exists():
             raise serializers.ValidationError(
-                'Этот рецепт уже добавлен в список покупок.')
+              'Этот рецепт уже добавлен в список покупок.'
+            )
         return data
 
     def create(self, validated_data):

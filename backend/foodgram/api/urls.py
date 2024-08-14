@@ -1,10 +1,16 @@
+from django.urls import include, path
 from rest_framework.routers import SimpleRouter
-from django.urls import include, path, re_path
 
-
-from django_short_url import views as surl_views
-
-from .views import IngredientViewSet, RecipeViewSet, TagViewSet, UserViewSet, AvatarViewSet, FavoriteViewSet, ShopViewSet, RecipeShortURL
+from .views import (
+    AvatarViewSet,
+    FavoriteViewSet,
+    IngredientViewSet,
+    RecipeShortURL,
+    RecipeViewSet,
+    ShopViewSet,
+    TagViewSet,
+    UserViewSet,
+)
 
 
 router = SimpleRouter()
@@ -36,6 +42,10 @@ urlpatterns = [
             'delete': 'remove_from_shop_list',
         }
     ), name='shop_list_create_delete'),
-    path('recipes/<int:id>/get-link/', RecipeShortURL.as_view(), name='shor_url'),
+    path(
+        'recipes/<int:id>/get-link/',
+        RecipeShortURL.as_view(),
+        name='shor_url'
+    ),
 
 ]

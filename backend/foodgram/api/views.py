@@ -1,30 +1,39 @@
 from django.contrib.auth import get_user_model
-from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
 from djoser import views as djoser_views
-from rest_framework import viewsets, status, permissions, generics
+from rest_framework import generics, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.pagination import LimitOffsetPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from rest_framework.decorators import action
-from django.shortcuts import get_object_or_404
 
-from .filters import RecipeFilter, IngredientsFilter
-from .models import Ingredient, Recipe, Tag, Subscribe, Favorite, ShopList, RecipeIngredients
+from .filters import IngredientsFilter, RecipeFilter
+from .models import (
+    Favorite,
+    Ingredient,
+    Recipe,
+    RecipeIngredients,
+    ShopList,
+    Subscribe,
+    Tag,
+)
+from .permissions import Author
 from .serializers import (
     AvatarSerializer,
+    FavoriteSerializer,
     IngredientSerializer,
     RecipeCreateSerializer,
     RecipeSerializer,
-    TagSerializer,
-    UserSerializer,
-    SubscribeCreateSerializer,
-    FavoriteSerializer,
     ShopListSerializer,
     ShortURLSerializer,
+    SubscribeCreateSerializer,
     SubscribeListSerializer,
+    TagSerializer,
+    UserSerializer,
 )
-from .permissions import Author
+
 
 User = get_user_model()
 
@@ -59,8 +68,11 @@ class UserViewSet(djoser_views.UserViewSet):
     def subscriptions(self, request):
         data = User.objects.filter(subscribed_to__subscriber=self.request.user)
         page = self.paginate_queryset(data)
-        serializer = SubscribeListSerializer(page, many=True,
-                                             context={'request': request})
+        serializer = SubscribeListSerializer(
+            page,
+            many=True,
+            context={'request': request}
+        )
         return self.get_paginated_response(serializer.data)
 
     @action(detail=True, methods=('post', 'delete'),
@@ -79,9 +91,11 @@ class UserViewSet(djoser_views.UserViewSet):
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
         elif request.method == 'DELETE':
-            subscription = Subscribe.objects.filter(subscriber=user, subscribed_to=subscribed_to)
+            subscription = Subscribe.objects.filter(
+                subscriber=user,
+                subscribed_to=subscribed_to
+            )
             if subscription.exists():
                 subscription.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
@@ -104,7 +118,7 @@ class AvatarViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=('delete',),
-            permission_classes=[IsAuthenticated])
+            permission_classes=(IsAuthenticated,))
     def delete_avatar(self, request):
         user = request.user
         user.avatar.delete(save=False)
@@ -138,7 +152,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         shop_list = ShopList.objects.filter(user=user)
 
         file_data = {
-            'Your shopping cart': '\n\n',
+            'Ваш список покупок': '\n\n',
         }
         ingredients_summary = {}
         for item in shop_list:
@@ -170,13 +184,17 @@ class FavoriteViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=('post',))
     def add_to_favorites(self, request, id):
-        serializer = FavoriteSerializer(data={}, context={'request': request,
-                                                          'view': self})
+        serializer = FavoriteSerializer(
+            data={},
+            context={'request': request, 'view': self}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(detail=False, methods=('delete',))
     def remove_from_favorites(self, request, id):
@@ -187,8 +205,10 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             favorite.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Favorite.DoesNotExist:
-            return Response({'detail': 'Favorite not found.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Favorite not found.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class ShopViewSet(viewsets.ModelViewSet):
@@ -197,13 +217,17 @@ class ShopViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=('post',))
     def add_to_shop_list(self, request, id):
-        serializer = ShopListSerializer(data={}, context={'request': request,
-                                                          'view': self})
+        serializer = ShopListSerializer(
+            data={},
+            context={'request': request, 'view': self}
+        )
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors,
-                        status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            serializer.errors,
+            status=status.HTTP_400_BAD_REQUEST
+        )
 
     @action(detail=False, methods=('delete',))
     def remove_from_shop_list(self, request, id):
@@ -214,8 +238,10 @@ class ShopViewSet(viewsets.ModelViewSet):
             shop.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ShopList.DoesNotExist:
-            return Response({'detail': 'Recipe not in shop list.'},
-                            status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {'detail': 'Recipe not in shop list.'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
 
 class RecipeShortURL(generics.RetrieveAPIView):

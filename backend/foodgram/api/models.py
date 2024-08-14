@@ -16,7 +16,7 @@ class CustomUser(AbstractUser):
         verbose_name='Адрес электронной почты',
         unique=True,
         error_messages={
-            'unique': 'This email already taken'
+            'unique': 'Этот адрес эл.почты уже занят!'
         },
         blank=False,
     )
@@ -24,7 +24,7 @@ class CustomUser(AbstractUser):
         verbose_name='Имя пользователя',
         unique=True,
         error_messages={
-            'unique': 'This username already taken'
+            'unique': 'Имя пользователя уже занято!'
         },
         max_length=150,
         validators=[username_validator],
