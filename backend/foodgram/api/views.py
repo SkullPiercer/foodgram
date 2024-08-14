@@ -10,6 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
+from .filters import RecipeFilter
 from .models import Ingredient, Recipe, Tag, Subscribe, Favorite, ShopList, RecipeIngredients
 from .serializers import (
     AvatarSerializer,
@@ -81,10 +82,11 @@ class UserViewSet(djoser_views.UserViewSet):
 
 
         elif request.method == 'DELETE':
-            subscription = get_object_or_404(Subscribe, subscriber=user,
-                                             subscribed_to=subscribed_to)
-            subscription.delete()
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            subscription = Subscribe.objects.filter(subscriber=user, subscribed_to=subscribed_to)
+            if subscription.exists():
+                subscription.delete()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 class AvatarViewSet(viewsets.ModelViewSet):
@@ -153,9 +155,9 @@ class RecipeViewSet(viewsets.ModelViewSet):
                     ingredients_summary[ingredient_name] = quantity
 
         for ingredient, total_quantity in ingredients_summary.items():
-            measurement_unit = recipe_ingredient.ingredient.measurement_unit.title
+            meas_unit = recipe_ingredient.ingredient.measurement_unit.title
             file_data[
-                f"{ingredient} ({measurement_unit})"] = f"{total_quantity}\n"
+                f"{ingredient} ({meas_unit})"] = f"{total_quantity}\n"
 
         response.write("\n".join(f"{k}: {v}" for k, v in file_data.items()))
 
