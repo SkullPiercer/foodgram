@@ -315,7 +315,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
 
         if Favorite.objects.filter(user=user, recipe_id=recipe_id).exists():
             raise serializers.ValidationError(
-              'Этот рецепт уже добавлен в избранное.'
+                'Этот рецепт уже добавлен в избранное.'
             )
 
         return data
@@ -350,7 +350,7 @@ class ShopListSerializer(serializers.ModelSerializer):
 
         if ShopList.objects.filter(user=user, recipe=recipe_id).exists():
             raise serializers.ValidationError(
-              'Этот рецепт уже добавлен в список покупок.'
+                'Этот рецепт уже добавлен в список покупок.'
             )
         return data
 
