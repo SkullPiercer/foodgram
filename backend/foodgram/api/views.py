@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser import views as djoser_views
 from rest_framework import viewsets, status, permissions, generics
@@ -9,7 +10,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError
 from django.shortcuts import get_object_or_404
 
-from .models import Ingredient, Recipe, Tag, Subscribe, Favorite, ShopList
+from .models import Ingredient, Recipe, Tag, Subscribe, Favorite, ShopList, RecipeIngredients
 from .serializers import (
     AvatarSerializer,
     IngredientSerializer,
@@ -59,9 +60,8 @@ class UserViewSet(djoser_views.UserViewSet):
         data = User.objects.filter(subscribed_to__subscriber=self.request.user)
         page = self.paginate_queryset(data)
         serializer = SubscribeListSerializer(page, many=True,
-                                        context={'request': request})
+                                             context={'request': request})
         return self.get_paginated_response(serializer.data)
-
 
     @action(detail=True, methods=('post', 'delete'),
             permission_classes=(IsAuthenticated,))
@@ -71,14 +71,14 @@ class UserViewSet(djoser_views.UserViewSet):
 
         if request.method == 'POST':
             data = {'subscriber': user.id, 'subscribed_to': id}
-            serializer = SubscribeCreateSerializer(data=data,
-                                                   context={'request': request,
-                                                            'view': self})
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data, status=status.HTTP_201_CREATED)
-            return Response(serializer.errors,
-                            status=status.HTTP_400_BAD_REQUEST)
+            serializer = SubscribeCreateSerializer(
+                data=data,
+                context={'request': request, 'view': self}
+            )
+            serializer.is_valid(raise_exception=True)
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
 
         elif request.method == 'DELETE':
             subscription = get_object_or_404(Subscribe, subscriber=user,
@@ -126,6 +126,40 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(author=self.request.user)
+
+    @action(detail=False, methods=('get',))
+    def download_shopping_cart(self, request):
+        user = request.user
+        file_name = f'{user.username}_shopping_list.txt'
+        response = HttpResponse(content_type='text/plain')
+        response['Content-Disposition'] = f'attachment; filename={file_name}'
+
+        shop_list = ShopList.objects.filter(user=user)
+
+        file_data = {
+            'Your shopping cart': '\n\n',
+        }
+        ingredients_summary = {}
+        for item in shop_list:
+            recipe_ingredients = RecipeIngredients.objects.filter(
+                recipe=item.recipe)
+            for recipe_ingredient in recipe_ingredients:
+                ingredient_name = recipe_ingredient.ingredient.name
+                quantity = recipe_ingredient.amount
+
+                if ingredient_name in ingredients_summary:
+                    ingredients_summary[ingredient_name] += quantity
+                else:
+                    ingredients_summary[ingredient_name] = quantity
+
+        for ingredient, total_quantity in ingredients_summary.items():
+            measurement_unit = recipe_ingredient.ingredient.measurement_unit.title
+            file_data[
+                f"{ingredient} ({measurement_unit})"] = f"{total_quantity}\n"
+
+        response.write("\n".join(f"{k}: {v}" for k, v in file_data.items()))
+
+        return response
 
 
 class FavoriteViewSet(viewsets.ModelViewSet):
