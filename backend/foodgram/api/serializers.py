@@ -74,14 +74,11 @@ class SubscribeCreateSerializer(serializers.ModelSerializer):
         subscribed_to = get_object_or_404(User, pk=subscribed_to_id)
 
         if subscriber == subscribed_to:
-            raise serializers.ValidationError("Нельзя подписаться на себя!")
+            raise serializers.ValidationError('Нельзя подписаться на себя!')
 
-        if Subscribe.objects.filter(
-            subscriber=subscriber,
-            subscribed_to=subscribed_to
-        ).exists():
+        if subscriber.subscriber.filter(subscribed_to=subscribed_to).exists():
             raise serializers.ValidationError(
-                "Вы уже подписаны на этого пользователя!"
+                'Вы уже подписаны на этого пользователя!'
             )
 
         data['subscriber'] = subscriber
@@ -127,13 +124,10 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        request = self.context.get('request', None)
+        request = self.context.get('request')
         if request is None or request.user.is_anonymous or request.user == obj:
             return False
-        return Subscribe.objects.filter(
-            subscribed_to=obj,
-            subscriber=request.user
-        ).exists()
+        return obj.subscribed_to.filter(subscriber=request.user).exists()
 
 
 class SubscribeListSerializer(UserSerializer):
@@ -263,9 +257,7 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
         tags = validated_data.pop('tags')
 
         recipe = Recipe.objects.create(**validated_data)
-
-        for _ in tags:
-            recipe.tags.set(tags)
+        recipe.tags.set(tags)
 
         for ingredient_data in ingredients_data:
             ingredient = ingredient_data['ingredient']
@@ -285,9 +277,7 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
         tags = validated_data.pop('tags')
 
         instance.ingredients.clear()
-
-        for _ in tags:
-            instance.tags.set(tags)
+        instance.tags.set(tags)
 
         for ingredient_data in ingredients_data:
             ingredient = ingredient_data['ingredient']
@@ -324,8 +314,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         recipe_id = self.context['view'].kwargs.get('id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        favorite = Favorite.objects.create(user=user, recipe=recipe)
-        return favorite
+        return Favorite.objects.create(user=user, recipe=recipe)
 
     def to_representation(self, instance):
         recipe = instance.recipe
@@ -358,8 +347,7 @@ class ShopListSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         recipe_id = self.context['view'].kwargs.get('id')
         recipe = get_object_or_404(Recipe, id=recipe_id)
-        shop = ShopList.objects.create(user=user, recipe=recipe)
-        return shop
+        return ShopList.objects.create(user=user, recipe=recipe)
 
     def to_representation(self, instance):
         recipe = instance.recipe
