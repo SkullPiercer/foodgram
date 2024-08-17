@@ -303,7 +303,7 @@ class FavoriteSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         recipe_id = self.context['view'].kwargs.get('id')
 
-        if Favorite.objects.filter(user=user, recipe_id=recipe_id).exists():
+        if user.favorites.filter(recipe__id=recipe_id).exists():
             raise serializers.ValidationError(
                 'Этот рецепт уже добавлен в избранное.'
             )
@@ -337,7 +337,7 @@ class ShopListSerializer(serializers.ModelSerializer):
         user = self.context['request'].user
         recipe_id = self.context['view'].kwargs.get('id')
 
-        if ShopList.objects.filter(user=user, recipe=recipe_id).exists():
+        if user.shop_user.filter(recipe__id=recipe_id).exists():
             raise serializers.ValidationError(
                 'Этот рецепт уже добавлен в список покупок.'
             )
