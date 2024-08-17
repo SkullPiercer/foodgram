@@ -92,10 +92,7 @@ class UserViewSet(djoser_views.UserViewSet):
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
         elif request.method == 'DELETE':
-            subscription = Subscribe.objects.filter(
-                subscriber=user,
-                subscribed_to=subscribed_to
-            )
+            subscription = user.subscriber.filter(subscribed_to=subscribed_to)
             if subscription.exists():
                 subscription.delete()
                 return Response(status=status.HTTP_204_NO_CONTENT)
@@ -112,10 +109,9 @@ class AvatarViewSet(viewsets.ModelViewSet):
         user = request.user
         serializer = AvatarSerializer(user, data=request.data,
                                       partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=False, methods=('delete',),
             permission_classes=(IsAuthenticated,))
@@ -149,7 +145,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
         response = HttpResponse(content_type='text/plain')
         response['Content-Disposition'] = f'attachment; filename={file_name}'
 
-        shop_list = ShopList.objects.filter(user=user)
+        shop_list = user.shop_user.all()
 
         file_data = {
             'Ваш список покупок': '\n\n',
@@ -188,20 +184,16 @@ class FavoriteViewSet(viewsets.ModelViewSet):
             data={},
             context={'request': request, 'view': self}
         )
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(
-            serializer.errors,
-            status=status.HTTP_400_BAD_REQUEST
-        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=False, methods=('delete',))
     def remove_from_favorites(self, request, id):
         user = request.user
+        recipe = get_object_or_404(Recipe, id=id)
         try:
-            recipe = get_object_or_404(Recipe, id=id)
-            favorite = Favorite.objects.get(user=user, recipe=recipe)
+            favorite = user.favorites.get(recipe=recipe)
             favorite.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except Favorite.DoesNotExist:
@@ -232,9 +224,9 @@ class ShopViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=('delete',))
     def remove_from_shop_list(self, request, id):
         user = request.user
+        recipe = get_object_or_404(Recipe, id=id)
         try:
-            recipe = get_object_or_404(Recipe, id=id)
-            shop = ShopList.objects.get(user=user, recipe=recipe)
+            shop = user.shop_user.get(recipe=recipe)
             shop.delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ShopList.DoesNotExist:
