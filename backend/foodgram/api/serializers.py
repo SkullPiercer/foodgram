@@ -140,7 +140,7 @@ class SubscribeListSerializer(UserSerializer):
 
     def get_recipes(self, obj):
         recipes = obj.recipes.all()
-        limit = self.context.get('request').GET.get('recipes_limit')
+        limit = self.context['request'].GET.get('recipes_limit')
         if limit:
             recipes = recipes[:int(limit)]
         return RecipeMiniSerializer(recipes, many=True, read_only=True).data
@@ -258,17 +258,20 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
 
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
+        recipe_ingredients = []
 
         for ingredient_data in ingredients_data:
             ingredient = ingredient_data['ingredient']
             amount = ingredient_data['amount']
 
-            RecipeIngredients.objects.create(
-                ingredient_id=ingredient.id,
-                recipe_id=recipe.id,
-                amount=amount
-
+            recipe_ingredients.append(
+                RecipeIngredients(
+                    ingredient_id=ingredient.id,
+                    recipe_id=recipe.id,
+                    amount=amount
+                )
             )
+        RecipeIngredients.objects.bulk_create(recipe_ingredients)
 
         return recipe
 
