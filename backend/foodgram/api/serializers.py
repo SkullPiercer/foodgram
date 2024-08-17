@@ -219,6 +219,23 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
         )
         read_only_fields = ('author', 'is_favorited', 'is_in_shopping_cart',)
 
+    @staticmethod
+    def create_ingredients(ingredients_data, recipe_id):
+        recipe_ingredients = []
+
+        for ingredient_data in ingredients_data:
+            ingredient = ingredient_data['ingredient']
+            amount = ingredient_data['amount']
+
+            recipe_ingredients.append(
+                RecipeIngredients(
+                    ingredient_id=ingredient.id,
+                    recipe_id=recipe_id,
+                    amount=amount
+                )
+            )
+        return recipe_ingredients
+
     def validate(self, data):
         data = super().validate(data)
         request = self.context['request']
@@ -258,19 +275,8 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
 
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        recipe_ingredients = []
-
-        for ingredient_data in ingredients_data:
-            ingredient = ingredient_data['ingredient']
-            amount = ingredient_data['amount']
-
-            recipe_ingredients.append(
-                RecipeIngredients(
-                    ingredient_id=ingredient.id,
-                    recipe_id=recipe.id,
-                    amount=amount
-                )
-            )
+        recipe_ingredients = self.create_ingredients(ingredients_data,
+                                                     recipe.id)
         RecipeIngredients.objects.bulk_create(recipe_ingredients)
 
         return recipe
@@ -281,17 +287,10 @@ class RecipeCreateSerializer(RecipeSerializer, RecipeMixin):
 
         instance.ingredients.clear()
         instance.tags.set(tags)
+        recipe_ingredients = self.create_ingredients(ingredients_data,
+                                                     instance.id)
+        RecipeIngredients.objects.bulk_create(recipe_ingredients)
 
-        for ingredient_data in ingredients_data:
-            ingredient = ingredient_data['ingredient']
-            amount = ingredient_data['amount']
-
-            RecipeIngredients.objects.create(
-                ingredient_id=ingredient.id,
-                recipe_id=instance.id,
-                amount=amount
-
-            )
         return super().update(instance, validated_data)
 
 
