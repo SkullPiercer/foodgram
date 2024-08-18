@@ -75,7 +75,8 @@ class Ingredient(models.Model):
     measurement_unit = models.ForeignKey(
         Unit,
         on_delete=models.CASCADE,
-        verbose_name='Единица измерения'
+        verbose_name='Единица измерения',
+        related_name='measurement_unit',
     )
 
     class Meta:
@@ -104,12 +105,14 @@ class RecipeIngredients(models.Model):
     recipe = models.ForeignKey(
         'Recipe',
         on_delete=models.CASCADE,
-        verbose_name='Рецепт'
+        verbose_name='Рецепт',
+        related_name='recipes'
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        verbose_name='Ингредиент'
+        verbose_name='Ингредиент',
+        related_name='ingredients'
     )
     amount = models.PositiveSmallIntegerField(default=0, verbose_name='Кол-во')
 
