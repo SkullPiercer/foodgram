@@ -16,13 +16,6 @@ from .models import (
     ShopList
 )
 
-from .validators import (
-    username_validator,
-    validate_cooking_time,
-    validate_ingredients,
-    validate_tags,
-)
-
 User = get_user_model()
 
 
@@ -104,9 +97,7 @@ class AvatarSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    username = serializers.CharField(
-        validators=(username_validator,)
-    )
+    username = serializers.CharField()
     is_subscribed = serializers.SerializerMethodField()
     avatar = Base64ImageField(required=False, allow_null=True)
 
