@@ -1,0 +1,33 @@
+version: '3'
+
+volumes:
+  kittygram_data:
+  static:
+
+services:
+  db:
+    image: postgres:13
+    env_file: .env
+    volumes:
+      - kittygram_data:/var/lib/postgresql/data
+  backend:
+    image: akatsukisanya/foodgram_backend
+    env_file: .env
+    volumes:
+      - static:/backend_static
+    depends_on:
+      - db
+  frontend:
+    image: akatsukisanya/foodgram_frontend
+    env_file: .env
+    command: cp -r /app/build/. /static/
+    volumes:
+      - static:/static
+  gateway:
+    image: akatsukisanya/foodgram_gateway
+    ports:
+      - 8000:80
+    depends_on:
+      - backend
+    volumes:
+      - static:/staticfiles/
