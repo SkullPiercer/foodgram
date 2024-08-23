@@ -18,8 +18,6 @@ services:
     env_file: .env
     volumes:
       - static_volume:/backend_static
-      - media:app/media/
-      - redoc:/app/docs
   frontend:
     image: 9sasha9/foodgram_frontend
     env_file: .env
@@ -31,7 +29,5 @@ services:
     env_file: .env
     volumes:
       - static_volume:/staticfiles/
-      - media:/media
-      - redoc:/usr/share/nginx/html/api/docs/
     ports:
       - 8000:80
