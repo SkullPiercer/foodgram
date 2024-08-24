@@ -5,6 +5,8 @@ from django.core.serializers import deserialize
 
 
 class Command(BaseCommand):
+    help = "Help me please"
+
     def handle(self, *args, **kwargs):
         self.load_json('ingredients.json')
 
