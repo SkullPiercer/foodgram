@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'djoser',
     'django_filters',
     'django_short_url',
+    'foodgram'
 ]
 
 MIDDLEWARE = [
