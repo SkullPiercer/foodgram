@@ -16,3 +16,4 @@ class Command(BaseCommand):
             for obj in deserialize('json', json.dumps(data)):
                 obj.save()
         self.stdout.write(self.style.SUCCESS('Successfully loaded JSON data'))
+#123
