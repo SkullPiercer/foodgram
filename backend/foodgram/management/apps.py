@@ -1,6 +1,6 @@
 from django.apps import AppConfig
 
 
-class FixtureConfig(AppConfig):
+class ManagementConfig(AppConfig):
     default_auto_field = 'django.db.models.BigAutoField'
-    name = 'fixture'
+    name = 'management'
