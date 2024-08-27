@@ -10,7 +10,9 @@ class Command(BaseCommand):
     help = "Help me please"
 
     def handle(self, *args, **kwargs):
-        fixture_path = os.path.join('api', 'management', 'commands', 'ingredients.json')
+        fixture_path = os.path.join(
+            'api', 'management', 'commands', 'ingredients.json'
+        )
         self.load_json(fixture_path)
 
     def load_json(self, file_path):

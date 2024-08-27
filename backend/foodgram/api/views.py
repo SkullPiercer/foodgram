@@ -16,7 +16,6 @@ from .models import (
     Recipe,
     RecipeIngredients,
     ShopList,
-    Subscribe,
     Tag,
 )
 from .permissions import Author
