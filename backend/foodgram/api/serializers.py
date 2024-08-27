@@ -250,7 +250,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         request = self.context['request']
         tags_data = request.data.get('tags')
         ingredients_data = request.data.get('ingredients')
-        cooking_time = request.data.get('cooking_time')
+        cooking_time = int(request.data.get('cooking_time'))
         if tags_data is None or len(tags_data) == 0 or len(
                 set(tags_data)) < len(tags_data):
             raise serializers.ValidationError(
