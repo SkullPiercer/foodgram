@@ -268,7 +268,7 @@ class RecipeCreateSerializer(RecipeSerializer):
         unique_ingredients = set()
         for ingredient in ingredients_data:
             unique_ingredients.add(ingredient['id'])
-            if ingredient['amount'] < 1:
+            if int(ingredient['amount']) < 1:
                 raise serializers.ValidationError(
                     {'ingredients': 'Неверно передано кол-во ингредиентов!'}
                 )
