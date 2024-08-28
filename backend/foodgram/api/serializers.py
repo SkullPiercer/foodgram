@@ -17,6 +17,8 @@ from .models import (
 )
 
 User = get_user_model()
+MIN_VALUE = 1
+MAX_VALUE = 32000
 
 
 class Base64ImageField(serializers.ImageField):
@@ -144,6 +146,11 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         queryset=Ingredient.objects.all(),
         source='ingredient'
     )
+    amount = serializers.IntegerField(
+        required=True,
+        min_value=MIN_VALUE,
+        max_value=MAX_VALUE
+    )
 
     class Meta:
         model = RecipeIngredients
@@ -201,7 +208,11 @@ class RecipeSerializer(serializers.ModelSerializer):
 class RecipeCreateSerializer(RecipeSerializer):
     ingredients = IngredientAmountSerializer(many=True, required=True)
     image = Base64ImageField(required=True)
-    cooking_time = serializers.IntegerField(required=True)
+    cooking_time = serializers.IntegerField(
+        required=True,
+        min_value=MIN_VALUE,
+        max_value=MAX_VALUE
+    )
     author = UserSerializer(read_only=True)
     tags = serializers.PrimaryKeyRelatedField(queryset=Tag.objects.all(),
                                               many=True)
@@ -235,51 +246,38 @@ class RecipeCreateSerializer(RecipeSerializer):
                     amount=amount
                 )
             )
+        RecipeIngredients.objects.bulk_create(recipe_ingredients)
         return recipe_ingredients
 
-    @staticmethod
-    def validate_utils(data, name):
-        print(data)
-        if data is None or len(data) == 0 or len(set(data)) < len(data):
-            raise serializers.ValidationError(
-                {name: f'Неверно передано поле {name}!'}
-            )
-        return True
 
     def validate(self, data):
         request = self.context['request']
         tags_data = request.data.get('tags')
         ingredients_data = request.data.get('ingredients')
-        cooking_time = int(request.data.get('cooking_time'))
-        if tags_data is None or len(tags_data) == 0 or len(
-                set(tags_data)) < len(tags_data):
+        if not tags_data:
             raise serializers.ValidationError(
                 {'tags': 'Неверно переданы теги!'}
+            )
+        if len(set(tags_data)) < len(tags_data):
+            raise serializers.ValidationError(
+                {'tags': 'Переданы одинаковые теги!'}
             )
         for tag in tags_data:
             if not Tag.objects.filter(id=tag).exists():
                 raise serializers.ValidationError(
                     {'tags': 'Несуществующий тег.'}
                 )
-        if ingredients_data is None or len(ingredients_data) == 0:
+        if not ingredients_data:
             raise serializers.ValidationError(
                 {'ingredients': 'Неверно переданы ингредиенты!'}
             )
         unique_ingredients = set()
         for ingredient in ingredients_data:
             unique_ingredients.add(ingredient['id'])
-            if int(ingredient['amount']) < 1:
-                raise serializers.ValidationError(
-                    {'ingredients': 'Неверно передано кол-во ингредиентов!'}
-                )
 
         if len(unique_ingredients) < len(ingredients_data):
             raise serializers.ValidationError(
                 {'ingredients': 'Переданы одинаковые ингредиенты!'}
-            )
-        if cooking_time < 1 or cooking_time > 32000:
-            raise serializers.ValidationError(
-                {'cooking_time': 'Неверное время приготовления!'}
             )
         return data
 
@@ -289,13 +287,10 @@ class RecipeCreateSerializer(RecipeSerializer):
 
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        recipe_ingredients = self.create_ingredients(
+        self.create_ingredients(
             ingredients_data,
             recipe.id
         )
-
-        RecipeIngredients.objects.bulk_create(recipe_ingredients)
-
         return recipe
 
     def update(self, instance, validated_data):
@@ -304,12 +299,10 @@ class RecipeCreateSerializer(RecipeSerializer):
 
         instance.ingredients.clear()
         instance.tags.set(tags)
-        recipe_ingredients = self.create_ingredients(
+        self.create_ingredients(
             ingredients_data,
             instance.id
         )
-        RecipeIngredients.objects.bulk_create(recipe_ingredients)
-
         return super().update(instance, validated_data)
 
     def to_representation(self, instance):
