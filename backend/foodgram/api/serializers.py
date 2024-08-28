@@ -249,7 +249,6 @@ class RecipeCreateSerializer(RecipeSerializer):
         RecipeIngredients.objects.bulk_create(recipe_ingredients)
         return recipe_ingredients
 
-
     def validate(self, data):
         request = self.context['request']
         tags_data = request.data.get('tags')
