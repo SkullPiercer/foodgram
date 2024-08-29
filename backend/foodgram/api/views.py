@@ -5,7 +5,7 @@ from django.shortcuts import get_object_or_404
 from djoser import views as djoser_views
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -125,7 +125,8 @@ class AvatarViewSet(viewsets.ModelViewSet):
 class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
     permission_classes = (Author, permissions.IsAuthenticatedOrReadOnly)
-    pagination_class = LimitOffsetPagination
+    pagination_class = PageNumberPagination
+    PageNumberPagination.page_size_query_param = 'limit'
     filter_backends = (DjangoFilterBackend,)
     filterset_class = RecipeFilter
 
