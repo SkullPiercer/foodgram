@@ -5,7 +5,10 @@ from django.shortcuts import get_object_or_404
 from djoser import views as djoser_views
 from rest_framework import generics, permissions, status, viewsets
 from rest_framework.decorators import action
-from rest_framework.pagination import LimitOffsetPagination, PageNumberPagination
+from rest_framework.pagination import (
+    LimitOffsetPagination,
+    PageNumberPagination
+)
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
@@ -40,12 +43,14 @@ User = get_user_model()
 class TagViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
+    pagination_class = None
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 
 class IngredientViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
+    pagination_class = None
     filter_backends = (DjangoFilterBackend,)
     filterset_class = IngredientsFilter
 
